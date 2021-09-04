@@ -1,0 +1,69 @@
+; Function Name:    _PathSplitByRegExp()
+; Description:      Splits the path to 9 elements.
+; Parameter(s):     $sPath - Path to split.
+; Requirement(s):
+; Return Value(s):  On seccess - Array $aRetArray that contain 9 elements:
+;                   $aRetArray[0] = Full path ($sPath)
+;                   $aRetArray[1] = Drive letter
+;                   $aRetArray[2] = Path without FileName and extension
+;                   $aRetArray[3] = Full path without File Extension
+;                   $aRetArray[4] = Full path without drive letter
+;                   $aRetArray[5] = Full path without drive letter and without FileName and extension
+;                   $aRetArray[6] = FileName and extension
+;                   $aRetArray[7] = Just Filename
+;                   $aRetArray[8] = Just Extension of a file
+;
+;                   On failure - If $sPath is not a valid path (the path is not splitable), then original $sPath is returned.
+;                   If $sPath does not include supported delimiters or it's emty, @error set to 1 and -1 is returned.
+;
+; Note(s):          The path can include backslash as well (exmp: C:/test/test.zip).
+;
+; Author(s):        G.Sandler a.k.a CreatoR (MrCreatoR) - Thanks to amel27 for help with RegExp
+;===============================================================================
+Func _PathSplitByRegExp($sPath)
+    If $sPath = "" Or (StringInStr($sPath, "\") And StringInStr($sPath, "/")) Then
+        Return SetError(1, 0, -1)
+    EndIf
+
+    Local $aRetArray[2], $pDelim = ""
+
+    If StringRegExp($sPath, '^(?i)([A-Z]:|\\)(\\[^\\]+)+$') Then
+        $pDelim = "\"
+    EndIf
+
+    If StringRegExp($sPath, '(?i)(^.*:/)(/[^/]+)+$') Then
+        $pDelim = "//"
+    EndIf
+
+    If $pDelim = "" Then
+        $pDelim = "/"
+    EndIf
+
+    If Not StringInStr($sPath, $pDelim) Then
+        Return $sPath
+    EndIf
+
+    If $pDelim = "\" Then
+        $pDelim &= "\"
+    EndIf
+
+    $aRetArray[0] = $ ;Full path
+    $aRetArray[1] = StringRegExpReplace($sPath, "^.*" & $pDelim, "") ;FileName and extension
+
+    Return $aRetArray
+
+ EndFunc
+
+ #include <Array.au3>
+
+;$sPath = "C:\Users\JiLO\Documents\Script-Files"
+$sPath = Clipget()
+$aPathArr = _PathSplitByRegExp($sPath)
+
+If IsArray($aPathArr) Then
+    _ArrayDisplay($aPathArr, "Demo of _PathSplitRegExp()")
+ElseIf $aPathArr = $sPath Then
+    MsgBox(64, "Demo of _PathSplitRegExp()", $aPathArr)
+Else
+    MsgBox(48, "Error", "The path is not correct")
+ EndIf
